@@ -1415,71 +1415,71 @@ def base_driver():
     yield driver
 
 
-# @pytest.mark.hookwrapper
-# def pytest_runtest_makereport(item, call):
-#     pytest_html = item.config.pluginmanager.getplugin("html")
-#     outcome = yield
-#     report = outcome.get_result()
-#     if sb_config._multithreaded:
-#         sb_config._using_html_report = True  # For Dashboard use
-#     if (
-#         pytest_html
-#         and report.when == "call"
-#         and hasattr(sb_config, "dashboard")
-#     ):
-#         if sb_config.dashboard and not sb_config._sbase_detected:
-#             test_id, display_id = _get_test_ids_(item)
-#             r_outcome = report.outcome
-#             if len(r_outcome) > 1:
-#                 r_outcome = r_outcome[0].upper() + r_outcome[1:]
-#             sb_config._results[test_id] = r_outcome
-#             sb_config._duration[test_id] = "*****"
-#             sb_config._display_id[test_id] = display_id
-#             sb_config._d_t_log_path[test_id] = ""
-#             if test_id not in sb_config._extra_dash_entries:
-#                 sb_config._extra_dash_entries.append(test_id)
-#         try:
-#             extra_report = None
-#             if hasattr(item, "_testcase"):
-#                 extra_report = item._testcase._html_report_extra
-#             elif hasattr(item.instance, "sb") or (
-#                 item.nodeid in sb_config._sb_node
-#             ):
-#                 if not hasattr(item.instance, "sb"):
-#                     sb_node = sb_config._sb_node[item.nodeid]
-#                 else:
-#                     sb_node = item.instance.sb
-#                 test_id = item.nodeid
-#                 if not test_id:
-#                     test_id = "unidentified_TestCase"
-#                 test_id = test_id.replace(" ", "_")
-#                 if "[" in test_id:
-#                     test_id_intro = test_id.split("[")[0]
-#                     parameter = test_id.split("[")[1]
-#                     parameter = re.sub(re.compile(r"\W"), "", parameter)
-#                     test_id = test_id_intro + "__" + parameter
-#                 test_id = test_id.replace("/", ".").replace("\\", ".")
-#                 test_id = test_id.replace("::", ".").replace(".py", "")
-#                 sb_node._sb_test_identifier = test_id
-#                 if sb_node._needs_tearDown:
-#                     sb_node.tearDown()
-#                     sb_node._needs_tearDown = False
-#                 extra_report = sb_node._html_report_extra
-#             else:
-#                 return
-#             extra = getattr(report, "extra", [])
-#             if len(extra_report) > 1 and extra_report[1]["content"]:
-#                 report.extra = extra + extra_report
-#             if sb_config._dash_is_html_report:
-#                 # (If the Dashboard URL is the same as the HTML Report URL:)
-#                 # Have the html report refresh back to a dashboard on update
-#                 refresh_updates = (
-#                     '<script type="text/javascript" src="%s">'
-#                     "</script>" % constants.Dashboard.LIVE_JS
-#                 )
-#                 report.extra.append(pytest_html.extras.html(refresh_updates))
-#         except Exception:
-#             pass
+@pytest.mark.hookwrapper
+def pytest_runtest_makereport(item, call):
+    pytest_html = item.config.pluginmanager.getplugin("html")
+    outcome = yield
+    report = outcome.get_result()
+    if sb_config._multithreaded:
+        sb_config._using_html_report = True  # For Dashboard use
+    if (
+        pytest_html
+        and report.when == "call"
+        and hasattr(sb_config, "dashboard")
+    ):
+        if sb_config.dashboard and not sb_config._sbase_detected:
+            test_id, display_id = _get_test_ids_(item)
+            r_outcome = report.outcome
+            if len(r_outcome) > 1:
+                r_outcome = r_outcome[0].upper() + r_outcome[1:]
+            sb_config._results[test_id] = r_outcome
+            sb_config._duration[test_id] = "*****"
+            sb_config._display_id[test_id] = display_id
+            sb_config._d_t_log_path[test_id] = ""
+            if test_id not in sb_config._extra_dash_entries:
+                sb_config._extra_dash_entries.append(test_id)
+        try:
+            extra_report = None
+            if hasattr(item, "_testcase"):
+                extra_report = item._testcase._html_report_extra
+            elif hasattr(item.instance, "sb") or (
+                item.nodeid in sb_config._sb_node
+            ):
+                if not hasattr(item.instance, "sb"):
+                    sb_node = sb_config._sb_node[item.nodeid]
+                else:
+                    sb_node = item.instance.sb
+                test_id = item.nodeid
+                if not test_id:
+                    test_id = "unidentified_TestCase"
+                test_id = test_id.replace(" ", "_")
+                if "[" in test_id:
+                    test_id_intro = test_id.split("[")[0]
+                    parameter = test_id.split("[")[1]
+                    parameter = re.sub(re.compile(r"\W"), "", parameter)
+                    test_id = test_id_intro + "__" + parameter
+                test_id = test_id.replace("/", ".").replace("\\", ".")
+                test_id = test_id.replace("::", ".").replace(".py", "")
+                sb_node._sb_test_identifier = test_id
+                if sb_node._needs_tearDown:
+                    sb_node.tearDown()
+                    sb_node._needs_tearDown = False
+                extra_report = sb_node._html_report_extra
+            else:
+                return
+            extra = getattr(report, "extra", [])
+            if len(extra_report) > 1 and extra_report[1]["content"]:
+                report.extra = extra + extra_report
+            if sb_config._dash_is_html_report:
+                # (If the Dashboard URL is the same as the HTML Report URL:)
+                # Have the html report refresh back to a dashboard on update
+                refresh_updates = (
+                    '<script type="text/javascript" src="%s">'
+                    "</script>" % constants.Dashboard.LIVE_JS
+                )
+                report.extra.append(pytest_html.extras.html(refresh_updates))
+        except Exception:
+            pass
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -1506,4 +1506,5 @@ def pytest_runtest_makereport(item, call):
             f.write(rep.nodeid + extra + "\n")
         # 添加allure报告截图
         with allure.step('添加失败截图...'):
+            global driver
             allure.attach(driver.get_screenshot_as_png(), "失败截图", allure.attachment_type.PNG)
