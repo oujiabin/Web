@@ -61,29 +61,54 @@ SeleniumBase is a complete framework for automated browser testing with pytest.
 <p align="left">Example: <a href="https://github.com/seleniumbase/SeleniumBase/blob/master/examples/my_first_test.py">my_first_test.py</a> (<code>--demo</code> mode)</p>
 
 ```bash
-pytest my_first_test.py --demo
+pytest my_first_test.py
 ```
 
 <p align="left"><a href="https://github.com/seleniumbase/SeleniumBase/blob/master/examples/my_first_test.py"><img src="https://seleniumbase.io/cdn/gif/my_first_test_4.gif" alt="SeleniumBase Demo Mode" title="SeleniumBase Demo Mode" /></a></p>
 
 ```python
-from seleniumbase import BaseCase
 
-class MyTestClass(BaseCase):
-    def test_basics(self):
-        url = "https://store.xkcd.com/collections/posters"
-        self.open(url)
-        self.type('input[name="q"]', "xkcd book")
-        self.click('input[value="Search"]')
-        self.assert_text("xkcd: volume 0", "h3")
-        self.open("https://xkcd.com/353/")
-        self.assert_title("xkcd: Python")
-        self.assert_element('img[alt="Python"]')
-        self.click('a[rel="license"]')
-        self.assert_text("free to copy and reuse")
-        self.go_back()
-        self.click_link("About")
-        self.assert_exact_text("xkcd.com", "h2")
+import pytest
+from seleniumbase import Base
+from Web_auto_reviews.element.login import Login
+from Web_auto_reviews.data import LoginData, Url
+
+
+class TestLogin:
+    """
+    Shopify login page
+    """
+
+    @classmethod
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(cls, base_driver):
+        """
+        前置步骤
+        :return:
+        """
+        cls.driver = Base(base_driver)
+        cls.driver.open(Url.shopify)
+        cls.login = Login(base_driver)
+
+    @pytest.mark.parametrize('user, passwd', LoginData.param)
+    def test_case_test(self, user, passwd):
+        """
+        账号密码登录测试
+        """
+        self.login.account_email.type(user)
+        self.login.next_button.click()
+        self.login.password_input.type(passwd)
+        self.login.login_button.click()
+        # self.login.logo_name.assert_element()
+        self.login.account_email.assert_element()
+
+    def teardown(self):
+        """
+        后置步骤
+        :return:
+        """
+        self.driver.sleep(1)
+
 ```
 
 --------
@@ -202,7 +227,7 @@ pytest test_swag_labs.py
 🔵 <b>Run [my_first_test.py](https://github.com/seleniumbase/SeleniumBase/blob/master/examples/my_first_test.py) in Demo Mode:</b>
 
 ```bash
-pytest my_first_test.py --demo
+pytest my_first_test.py
 ```
 
 <a href="https://github.com/seleniumbase/SeleniumBase/blob/master/examples/my_first_test.py"><img src="https://seleniumbase.io/cdn/gif/my_first_test_4.gif" alt="SeleniumBase Demo Mode" title="SeleniumBase Demo Mode" /></a>
